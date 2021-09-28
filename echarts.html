@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>招聘信息统计</title>
+    <script type="text/javascript" src="/static/js/echarts.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/js/js2wordcloud.js"></script>
+</head>
+<style>
+    html , body , .content {
+    width:100%;
+    height:100%;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    background-color: #ccc;
+}
+.content {
+    padding: 40px;
+}
+.header {
+    height: 10%;
+    width: 100%;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 60px;
+    text-align: center;
+}
+.body {
+    height: 100%;
+    width: 100%;
+    text-align: center;
+}
+.chartBox {
+    width: 100%;
+    height: 60%;
+    margin-bottom:40px;
+}
+</style>
+<body>
+    <div class="content">
+        <div class="header"></div>
+        <div class="body">
+            <div class="chartBox" id="MyTop11"></div>
+            <div class="chartBox" id="PyJG"></div>
+            <div class="chartBox" id="SjZCy"></div>
+            <div class="chartBox" id="CbSj"></div>
+            <div class="chartBox" id = "SjPl"></div>
+        </div>
+        </div>
+    </div>
+</body>
+<script>
+    //折线图
+    var MyTop11 = echarts.init(document.getElementById('MyTop11'));
+    var data_name = [{% for r in rs_gmsj %} "{{r.BT}}", {% endfor %}]
+    var data_y = [{% for r in rs_gmsj %}"{{r.JG}}",{% endfor %}]
+
+    workOption = {
+        title: {
+            text: '莫言书籍',   //主标题
+            subtext: '              ---书籍Top11',  //副标题
+            x: '45%',   //设置标题位置
+            textStyle: {
+                fontWeight: 'bold',
+                fontFamily: 'FangSong',
+                fontSize: 18,
+            },
+        },
+        xAxis: {
+            type: 'category',
+            name: '书籍名称',
+            data: data_name,
+            axisLabel : {
+                interval: 0,
+                rotate: "35",    //x轴字体的旋转度
+            },
+        },
+        yAxis: {
+            name: '书籍价格',
+            type: 'value'
+        },
+        series: [{
+            data: data_y,
+            type: 'line',   //设置图形为折线图
+            label: {
+                normal: {
+                    show: true,
+                    position: 'top'  //折线图顶部显示对应的x轴数值
+                }
+            }
+        }]
+    }
+    MyTop11.setOption(workOption);   //设置echarts的option参数  加载并显示图形
+
+    //柱状图
+    var PyJG = echarts.init(document.getElementById('PyJG'));
+
+    var zz_name = [{% for r in rs_gpd %} "{{r.BT}}", {% endfor %}]
+    var jg = [{% for r in rs_gpd %}"{{r.JG}}",{% endfor %}]
+
+    PyJGWorkOption = {
+        title: {
+            text: 'Py书籍的价格',
+            subtext: '               ----书籍价格对比',
+            x: '45%',
+            textStyle:{
+                color:'#f30008',
+                fontStyle:'oblique',
+                fontWeight:'bold',
+                fontFamily:'FangSong',
+                fontSize:18
+            }
+        },
+        xAxis: {
+            type: 'category',
+            name: '作者名字',
+            data: zz_name,
+            axisLabel : {
+                interval: 0,
+                rotate: "15"    //x轴字体的旋转度
+            }
+        },
+        yAxis: {
+            type: 'value',
+            name: '书籍价格'
+        },
+        series: [{
+            data: jg,
+            type: 'bar',
+            label: {
+                normal: {
+                    show: true,
+                    position: 'top'
+                }
+            },
+            itemStyle: {
+               normal: {color: 'black'}
+            }
+        }]
+    };
+    PyJG.setOption(PyJGWorkOption);
+
+ //词云
+     var SjZCy = new Js2WordCloud(document.getElementById('SjZCy'));
+     var word_cloud = [{% for r in rs_gscb %}["{{r.ZZ}}","{{r.PLS}}"],{% endfor %}]
+
+    wordCloudOption = {
+        tooltip:{
+            show:true
+        },
+        list:word_cloud,
+        color: '#15a4fa',
+        backgroundColor:'#CCC',
+        fontSize:18,
+        shape:'circle',
+        ellipticity:1
+     };
+    SjZCy.setOption(wordCloudOption);
+
+     //双饼图
+    var CbSj = echarts.init(document.getElementById('CbSj'));
+    var data_2019 = [{% for r in rs_c[0] %}{name:"{{r.month}}", value:"{{r.c_count}}"},{% endfor %}]
+    var data_2020 = [{% for r in rs_c[1] %}{name:"{{r.month}}", value:"{{r.c_count}}"},{% endfor %}]
+    var array_2019 = [{% for r in rs_c[0] %}"{{r.c_count}}",{% endfor %}];
+    var array_2020 = [{% for r in rs_c[1] %}"{{r.c_count}}",{% endfor %}];
+    var max_2019 = [];
+    var max_2020 = [];
+    array_2019.forEach(function(data){
+        max_2019.push(+parseInt(data));   ///遍历数组   将每个元素变成整型
+    });
+    max_2020.forEach(function(data){
+        max_2020.push(+parseInt(data));   ///遍历数组   将每个元素变成整型
+    });
+    CbSjOption = {
+        title : {
+            text: '"书籍"出版（按月份分组）',
+            subtext: '双饼图',
+            x:'center',
+            //modified 0523
+            textStyle:{
+                //文字颜色
+                color:'#f30008',
+                //字体风格,'normal','italic','oblique'
+                fontStyle:'oblique',
+                //字体粗细 'normal','bold','bolder','lighter',100 | 200 | 300 | 400...
+                fontWeight:'bold',
+                //字体系列
+                fontFamily:'FangSong'
+                //fontFamily: 'KaiTi'
+                //字体大小
+                //fontSize:18
+            }
+            //modified end
+        },
+        tooltip : {
+            trigger: 'item',
+            formatter: "{b}:{c}({d}%)"      //当鼠标移动到图形 显示数据(格式): 佛山（1111） 10%
+        },
+        legend: {
+            x : 'center',
+            y : '30%',
+            data:['2019年（左图）', '2020年（右图）']
+        },
+        series : [
+            {
+                name: '2019年（左图）',
+                type:'pie',
+                radius : [0, 110],     //图像的大小
+                center : ['25%', '50%'],    //图形的位置
+                data:data_2019
+            },
+            {
+                name: '2020年（右图）',
+                type:'pie',
+                radius : [0, 110],
+                center : ['75%', '50%'],
+                data:data_2020
+            }
+        ]
+    };
+    CbSj.setOption(CbSjOption);
+
+    //南丁格尔玫瑰图
+    var SjPl = echarts.init(document.getElementById('SjPl'));
+
+    var sj_name = [{% for r in rs_gmsj %}"{{r.BT}}",{% endfor %}]
+   var  pie_sj = [{% for r in rs_gmsj %}{value:"{{r.JG}}",name:"{{r.BT}}"},{% endfor %}]
+    var pls_sl= [{% for r in rs_gmsj %}"{{r.JG}}",{% endfor %}]
+
+    var pie_sj1= [{% for r in rs_gscb %} {value:"{{r.JG}}",name:"{{r.ZZ}}"},{% endfor %}]
+    var city_cd1 = [{% for r in rs_gscb %}"{{r.JG}}",{% endfor %}]
+
+    var dataInt_city = [];
+    var dataInt_city_cd1 = [];
+
+    dataInt_city.forEach(function(data){
+        city_cd.push(+parseInt(data));
+    });
+    dataInt_city_cd1.forEach(function(data){
+        city_cd1.push(+parseInt(data));
+    });
+
+   SjPlOption = {
+        title:{
+            text:'莫言书籍价格 vs 网络书籍(作者)价格',
+            subtext:'    ---南丁格尔玫瑰图',
+            x:'center',
+        },
+        tooltip:{
+            trigger:'item',
+            formatter:"{b}:{c}({d}%)",
+        },
+        legend: {
+            x:'center',
+            y:'bottom',
+            data:sj_name
+        },
+                color:[
+                '#C1232B','#B5C334','#FCCE10','#E87C25','#27727B',
+                                '#668ffe','#00ca54','#00dbfa','#f3006a','#60C0DD',
+                                '#d714b7','#84433c','#f490f3','#000000','#26C0C0'],
+        series:[
+            {
+                 type:'pie',
+                radius : [20, 110],
+                center : ['25%', '50%'],
+                roseType : 'radius',
+                data:pie_sj,
+            },
+            { type:'pie',
+                radius : [30, 110],
+                center : ['75%', '50%'],
+                roseType : 'area',
+                data:pie_sj1
+            }
+        ]
+    };
+    SjPl.setOption(SjPlOption);
+
+</script>
+</html>
